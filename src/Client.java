@@ -5,8 +5,13 @@ public class Client {
 	Socket socket;
 	DataOutputStream output;
 	DataInputStream input;
+	ClientWindow aWindow;
+	
+	public Client() {
+		aWindow  = new ClientWindow();
+	}
   
-	public void sendMessage(ClientWindow aWindow) {
+	public void sendMessage() {
 		if(aWindow.hasMessageToSend()) {
 			try {
     			String message = aWindow.getMessage();
@@ -17,17 +22,15 @@ public class Client {
 		}
 	}
 	
-	public String getMessage() {
+	public void getMessage() {
 		try {
 			if(input.available() > 0) {
 				byte[] bytes = new byte[input.readInt()];
 				input.read(bytes,0,bytes.length);
-				String message = new String(bytes,0,bytes.length,"UTF-8");
-				return message;
+				aWindow.displayMessage(new String(bytes,0,bytes.length,"UTF-8"));
 			}
 		} catch (UnsupportedEncodingException e) {
 		} catch (IOException e) {}
-		return null;
 	}
 
 	public void connectToServer() {
@@ -46,12 +49,11 @@ public class Client {
 	}
 		
 	public static void main(String[] args) {
-        final Client aClient = new Client();
-        final ClientWindow aWindow  = new ClientWindow(aClient);
+        Client aClient = new Client();
 		aClient.connectToServer();
 		while(true) {
-			aClient.sendMessage(aWindow);
-			aWindow.displayMessage(aClient.getMessage());
+			aClient.sendMessage();
+			aClient.getMessage();
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}

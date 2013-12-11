@@ -1,20 +1,8 @@
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 
 public class ClientWindow implements ActionListener {
-	Client myClient;
 	String messageToSend;
 	String history;
 	
@@ -23,8 +11,7 @@ public class ClientWindow implements ActionListener {
     JTextArea chatHistory;
     JScrollPane areaScrollPane;
     
-    public ClientWindow(Client aClient) {
-    	myClient = aClient;
+    public ClientWindow() {
     	messageToSend = "";
     	history = "";
     	SwingUtilities.invokeLater(new Runnable() {
@@ -84,12 +71,8 @@ public class ClientWindow implements ActionListener {
     }
 	
 	public void actionPerformed(ActionEvent e) {
-    	if(e.getSource().equals(sendButton) || e.getSource().equals(sendField)) {
-    		if(messageToSend.equals(""))
-    			messageToSend = sendField.getText();
-    		else
-    			messageToSend+="\n"+sendField.getText();
-    	}
+    	if(e.getSource().equals(sendButton) || e.getSource().equals(sendField))
+    		messageToSend += (messageToSend.equals("")) ? sendField.getText() : "\n"+sendField.getText();
     }
 	
 	public boolean hasMessageToSend() {
