@@ -1,109 +1,60 @@
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.net.*;
-import javax.swing.*;
 
-public class Client implements ActionListener {
-	String history = "";
+public class Client {
+	Socket socket;
 	DataOutputStream output;
-	
-    JButton sendButton;
-    JTextField sendField;
-    JTextArea chatHistory;
-    JScrollPane areaScrollPane;
-
-    public JPanel createContentPane (){
-        JPanel totalGUI = new JPanel();
-        totalGUI.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        
-        chatHistory = new JTextArea();
-        chatHistory.setLineWrap(true);
-        chatHistory.setEditable(false);
-        areaScrollPane = new JScrollPane(chatHistory);
-        areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 3;
-        c.weightx = 1.0;
-        c.weighty = 0.99;
-        c.fill = GridBagConstraints.BOTH;
-        totalGUI.add(areaScrollPane, c);
-        
-        sendField = new JTextField();
-        sendField.addActionListener(this);
-        c.gridy = 1;
-        c.gridwidth = 1;
-        c.weightx = 0.99;
-        c.weighty = 0.01;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        totalGUI.add(sendField, c);
-        
-        sendButton = new JButton("Send");
-        c.gridx = 1;
-        c.gridy = 1;
-        c.gridwidth = 1;
-        c.weightx = 0.01;
-        c.weighty = 0.01;
-        c.fill = GridBagConstraints.NONE;
-        sendButton.addActionListener(this);
-        totalGUI.add(sendButton, c);
-        
-        totalGUI.setOpaque(true);
-        return totalGUI;
-    }
-    
-	public void actionPerformed(ActionEvent e) {
-    	String message = sendField.getText();
-    	if(!message.equals("")) {
-    		try {
-    			output.writeInt(message.getBytes().length);
+	DataInputStream input;
+  
+	public void sendMessage(ClientWindow aWindow) {
+		if(aWindow.hasMessageToSend()) {
+			try {
+    			String message = aWindow.getMessage();
+				output.writeInt(message.getBytes().length);
 				output.write(message.getBytes(), 0, message.getBytes().length);
+				aWindow.clearSendField();
 			} catch (IOException e1) {}
-    	}
-    	chatHistory.setText(history);
-    	sendField.setText("");
-    }
+		}
+	}
+	
+	public String getMessage() {
+		try {
+			if(input.available() > 0) {
+				byte[] bytes = new byte[input.readInt()];
+				input.read(bytes,0,bytes.length);
+				String message = new String(bytes,0,bytes.length,"UTF-8");
+				return message;
+			}
+		} catch (UnsupportedEncodingException e) {
+		} catch (IOException e) {}
+		return null;
+	}
 
-    private static void createAndShowGUI(Client box) {
-        JFrame frame = new JFrame("Chat");
-        frame.setContentPane(box.createContentPane());
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(300,300));
-        frame.setVisible(true);
-    }
-    
-	public static void main(String[] args) throws IOException, InterruptedException {
-        final Client object = new Client();
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI(object);
-            }
-        });
-		Socket socket;
+	public void connectToServer() {
 		while(true) {
 			try {
 				socket = new Socket(InetAddress.getLocalHost(), 12543);
+				output = new DataOutputStream(socket.getOutputStream());
+				input = new DataInputStream(socket.getInputStream());
 				break;
-			} catch (ConnectException e) {}
-			Thread.sleep(100);
+			} catch (ConnectException e) {
+			} catch (IOException e) {}
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {}
 		}
-		object.output = new DataOutputStream(socket.getOutputStream());
-        DataInputStream is = new DataInputStream(socket.getInputStream());
-		byte[] bytes;
+	}
+		
+	public static void main(String[] args) {
+        final Client aClient = new Client();
+        final ClientWindow aWindow  = new ClientWindow(aClient);
+		aClient.connectToServer();
 		while(true) {
-			if(is.available() > 0) {
-				bytes = new byte[is.readInt()];
-				is.read(bytes,0,bytes.length);
-				object.history += object.history.equals("") ? new String(bytes,0,bytes.length,"UTF-8") : "\n" + new String(bytes,0,bytes.length,"UTF-8");
-				while(object.chatHistory==null) {
-					Thread.sleep(1000);
-				}
-				object.chatHistory.setText(object.history);
-				bytes = null;
-			}
-			Thread.sleep(100);
+			aClient.sendMessage(aWindow);
+			aWindow.displayMessage(aClient.getMessage());
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {}
 		}
 	}
 }
