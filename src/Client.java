@@ -69,7 +69,7 @@ public class Client implements ActionListener {
     private static void createAndShowGUI(Client box) {
         JFrame frame = new JFrame("Chat");
         frame.setContentPane(box.createContentPane());
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(new Dimension(300,300));
         frame.setVisible(true);
     }
