@@ -5,6 +5,13 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 public class Server {
+	
+	/**
+	 * Main entry point
+	 * @param args
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
 		final int portNumber = 12543;
 		ServerSocket receiveServerSocket = new ServerSocket(portNumber);
