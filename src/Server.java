@@ -8,10 +8,11 @@ import java.util.ArrayList;
 public class Server {
 	ServerSocket receiveServerSocket;
 	ArrayList<User> users;
+	String disconnectedMessage = "//closing";
 	
-	public Server(int number) {
+	public Server(int portNumber) {
 		try {
-			receiveServerSocket = new ServerSocket(number);
+			receiveServerSocket = new ServerSocket(portNumber);
 		} catch (IOException e) {}
 		try {
 			receiveServerSocket.setSoTimeout(100);
@@ -32,16 +33,16 @@ public class Server {
 	public void cycleThroughUsers() {
 		for(int i=0;i<users.size();i++) {
 			User currentUser = users.get(i);
-			if(!disconnected(currentUser))
-				sendMessage(currentUser);
+			performAction(currentUser);
 		}
 	}
 	
-	public boolean disconnected(User u) {
-		if(u.hasDisconnected() && u.hasUserName()) {
-			String goodbye = u.getuserName()+" has left the group.";
+	public boolean specialMessage(String s, User u) {
+		if(s.equals(disconnectedMessage) && u.hasUserName()) {
+			String name = u.getUserName();
+			String goodbye = name+" has left the group.";
 			for(User aUser : users)
-				if(aUser.hasUserName())
+				if(aUser.hasUserName() && aUser.getUserName()!=name)
 					aUser.sendMessage(goodbye);
 			users.remove(u);
 			return true;
@@ -49,11 +50,11 @@ public class Server {
 		return false;
 	}
 	
-	public void sendMessage(User u) {
+	public void performAction(User u) {
 		String message = u.receiveMessage();
-		if(message!=null) {
+		if(message!=null && !specialMessage(message, u)) {
 			if(!u.hasUserName()) {
-				u.setuserName(message);
+				u.setUserName(message);
 				String welcome = message + " has joined the group.";
 				for(User aUser : users)
 					if(aUser.hasUserName())

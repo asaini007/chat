@@ -2,10 +2,12 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class ClientWindow implements ActionListener {
+public class ClientWindow extends WindowAdapter implements ActionListener {
 	String messageToSend;
 	String history;
+	boolean open;
 	
+	JFrame frame;
     JButton sendButton;
     JTextField sendField;
     JTextArea chatHistory;
@@ -14,6 +16,7 @@ public class ClientWindow implements ActionListener {
     public ClientWindow() {
     	messageToSend = "";
     	history = "";
+    	open = true;
     	SwingUtilities.invokeLater(new Runnable() {
             public void run() {
             	createAndShowGUI();
@@ -22,9 +25,10 @@ public class ClientWindow implements ActionListener {
     }
     
 	public void createAndShowGUI() {
-        JFrame frame = new JFrame("Chat");
+        frame = new JFrame("Chat");
         frame.setContentPane(getContentPane());
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(this);
         frame.setSize(new Dimension(300,300));
         frame.setVisible(true);
     }
@@ -82,21 +86,29 @@ public class ClientWindow implements ActionListener {
 	public String getMessage() {
 		String toReturn = messageToSend;
 		messageToSend = "";
+		sendField.setText("");
 		return toReturn;
 	}
 	
-	public void clearSendField() {
-		sendField.setText("");
-	}
-	
 	public void displayMessage(String line) {
-		if(line!=null)
-			history += history.equals("") ? line : "\n" + line;
+		history += history.equals("") ? line : "\n" + line;
 		while(chatHistory==null) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {}
 		}
 		chatHistory.setText(history);
+	}
+	
+	public boolean isOpen() {
+		return open;
+	}
+	
+	public void windowClosing(WindowEvent e) {
+		open = false;
+	}
+	
+	public void close() {
+		frame.dispose();
 	}
 }

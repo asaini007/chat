@@ -12,11 +12,11 @@ public class User {
 		name = null;
 	}
 	
-	public String getuserName() {
+	public String getUserName() {
 		return name;
 	}
 	
-	public void setuserName(String userName) {
+	public void setUserName(String userName) {
 		name = userName;
 	}
 	
@@ -25,7 +25,7 @@ public class User {
 	}
 	
 	public boolean equals(User otherUser) {
-		return (otherUser.getuserName()  == getuserName()) ? true : false;
+		return (otherUser.getUserName()  == getUserName()) ? true : false;
 	}
 	
 	public void sendMessage(String message) {
@@ -41,7 +41,7 @@ public class User {
 		DataOutputStream output;
 		try {
 			output = new DataOutputStream(socket.getOutputStream());
-			message=otherUser.getuserName()+": "+message;
+			message=otherUser.getUserName()+": "+message;
 			output.writeInt(message.getBytes().length);
 			output.write(message.getBytes(), 0, message.getBytes().length);
 		} catch (IOException e) {}
@@ -58,14 +58,5 @@ public class User {
 			}
 		} catch (IOException e) {}
 		return message;
-	}
-	
-	public boolean hasDisconnected() {
-		try {
-			socket.getInputStream();
-			return false;
-		} catch (IOException e) {
-			return true;
-		}
 	}
 }

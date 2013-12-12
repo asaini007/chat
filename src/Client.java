@@ -17,7 +17,6 @@ public class Client {
     			String message = aWindow.getMessage();
 				output.writeInt(message.getBytes().length);
 				output.write(message.getBytes(), 0, message.getBytes().length);
-				aWindow.clearSendField();
 			} catch (IOException e1) {}
 		}
 	}
@@ -47,16 +46,29 @@ public class Client {
 			} catch (InterruptedException e) {}
 		}
 	}
+	
+	public void disconnectFromServer() {
+		try {
+			String message = "//closing";
+			output.writeInt(message.getBytes().length);
+			output.write(message.getBytes(), 0, message.getBytes().length);
+			output.close();
+			input.close();
+			socket.close();
+		} catch (IOException e) {}
+	}
 		
 	public static void main(String[] args) {
         Client aClient = new Client();
 		aClient.connectToServer();
-		while(true) {
+		while(aClient.aWindow.isOpen()) {
 			aClient.sendMessage();
 			aClient.getMessage();
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
 		}
+		aClient.disconnectFromServer();
+		aClient.aWindow.close();
 	}
 }
