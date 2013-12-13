@@ -2,37 +2,111 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class ClientWindow extends WindowAdapter implements ActionListener {
-	String messageToSend;
-	String history;
+public class ClientWindow {
+	String messageToSend, userName;
 	boolean open;
 	
 	JFrame frame;
-    JButton sendButton;
-    JTextField sendField;
-    JLabel friendsLabel;
+	JLabel userNameLabel, friendsLabel;
+	JTextField nameField, sendField;
+	JButton nameButton, sendButton, selectButton;
     JList<String> friendsList;
     DefaultListModel<String> listModel;
     JTextArea chatHistory;
-    JScrollPane areaScrollPane;
-    JScrollPane listScrollPane;
+    JScrollPane areaScrollPane, listScrollPane;
     
     public ClientWindow() {
     	messageToSend = "";
-    	history = "";
+    	userName = "";
     	open = true;
     	SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	createAndShowGUI();
+            	createAndShowUserNameGUI();
             }
         });
     }
     
+    public void createAndShowUserNameGUI() {
+    	frame = new JFrame("Log in");
+    	frame.setContentPane(getUserNameContentPane());
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+        	public void windowClosing(WindowEvent e) {
+        		open = false;
+        	}
+        });
+        frame.setSize(new Dimension(300,300));
+        frame.setVisible(true);
+        frame.setResizable(false);
+    }
+    
+	public JPanel getUserNameContentPane() {
+		JPanel userGUI = new JPanel();
+		userGUI.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        
+        userNameLabel = new JLabel("Enter User Name:");
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.33;
+        c.fill = GridBagConstraints.NONE;
+        userGUI.add(userNameLabel, c);
+        
+        nameField = new JTextField();
+        nameField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String name = nameField.getText();
+	    		if(!name.equals("")) {
+	    			userName = name;
+	    			createAndShowGUI();
+	    		}
+			}
+        });
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.33;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        userGUI.add(nameField, c);
+        
+        nameButton = new JButton("Enter");
+        c.gridx = 0;
+        c.gridy = 2;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.33;
+        c.fill = GridBagConstraints.NONE;
+        nameButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String name = nameField.getText();
+	    		if(!name.equals("")) {
+	    			userName = name;
+	    			createAndShowGUI();
+	    		}
+			}
+        });
+        userGUI.add(nameButton, c);
+        
+        userGUI.setOpaque(true);
+        return userGUI;
+	}
+
 	public void createAndShowGUI() {
-        frame = new JFrame("Chat");
+		frame.dispose();
+        frame = new JFrame(userName);
         frame.setContentPane(getContentPane());
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        frame.addWindowListener(this);
+        frame.addWindowListener(new WindowAdapter() {
+        	public void windowClosing(WindowEvent e) {
+        		open = false;
+        	}
+        });
         frame.setSize(new Dimension(300,300));
         frame.setVisible(true);
     }
@@ -42,7 +116,7 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
         totalGUI.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
-        chatHistory = new JTextArea();
+        chatHistory = new JTextArea("");
         chatHistory.setLineWrap(true);
         chatHistory.setEditable(false);
         areaScrollPane = new JScrollPane(chatHistory);
@@ -59,7 +133,7 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
         friendsLabel = new JLabel("Online Users:");
         c.gridx = 1;
         c.gridy = 0;
-        c.gridwidth = 1;
+        c.gridwidth = 2;
         c.gridheight = 1;
         c.weightx = 0.1;
         c.weighty = 0;
@@ -72,7 +146,7 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
         listScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         c.gridx = 1;
         c.gridy = 1;
-        c.gridwidth = 1;
+        c.gridwidth = 2;
         c.gridheight = 1;
         c.weightx = 0.1;
         c.weighty = 1;
@@ -80,7 +154,12 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
         totalGUI.add(listScrollPane, c);
         
         sendField = new JTextField();
-        sendField.addActionListener(this);
+        sendField.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		messageToSend += (messageToSend.equals("")) ? sendField.getText() : "\n"+sendField.getText();
+        		sendField.setText("");
+        	}
+        });
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 1;
@@ -98,23 +177,33 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
         c.weightx = 0;
         c.weighty = 0;
         c.fill = GridBagConstraints.NONE;
-        sendButton.addActionListener(this);
+        sendButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		messageToSend += (messageToSend.equals("")) ? sendField.getText() : "\n"+sendField.getText();
+        		sendField.setText("");
+        	}
+        });
         totalGUI.add(sendButton, c);
+        
+        selectButton = new JButton("Choose");
+        c.gridx = 2;
+        c.gridy = 2;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.fill = GridBagConstraints.NONE;
+        sendButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		messageToSend += (messageToSend.equals("")) ? sendField.getText() : "\n"+sendField.getText();
+        		sendField.setText("");
+        	}
+        });
+        totalGUI.add(selectButton, c);
         
         totalGUI.setOpaque(true);
         return totalGUI;
     }
-	
-	public void actionPerformed(ActionEvent e) {
-    	if(e.getSource().equals(sendButton) || e.getSource().equals(sendField)) {
-    		messageToSend += (messageToSend.equals("")) ? sendField.getText() : "\n"+sendField.getText();
-    		sendField.setText("");
-    	}
-    }
-	
-	public boolean hasMessageToSend() {
-		return !messageToSend.equals("");
-	}
 	
 	public String getMessage() {
 		String toReturn = messageToSend;
@@ -123,13 +212,12 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
 	}
 	
 	public void displayMessage(String line) {
-		history += history.equals("") ? line : "\n" + line;
 		while(chatHistory==null) {
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {}
 		}
-		chatHistory.setText(history);
+		chatHistory.append(line+"\n");
 	}
 	
 	public void remove(String s) {
@@ -138,14 +226,6 @@ public class ClientWindow extends WindowAdapter implements ActionListener {
 	
 	public void add(String s) {
 		listModel.addElement(s);
-	}
-	
-	public boolean isOpen() {
-		return open;
-	}
-	
-	public void windowClosing(WindowEvent e) {
-		open = false;
 	}
 	
 	public void close() {

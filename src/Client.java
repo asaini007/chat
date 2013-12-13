@@ -12,7 +12,7 @@ public class Client {
 	}
   
 	public void sendMessage() {
-		if(aWindow.hasMessageToSend()) {
+		if(aWindow.messageToSend.length()>0) {
 			try {
     			String message = aWindow.getMessage();
 				output.writeInt(message.getBytes().length);
@@ -63,6 +63,9 @@ public class Client {
 				socket = new Socket(InetAddress.getLocalHost(), 12543);
 				output = new DataOutputStream(socket.getOutputStream());
 				input = new DataInputStream(socket.getInputStream());
+				String message = aWindow.userName;
+				output.writeInt(message.getBytes().length);
+				output.write(message.getBytes(), 0, message.getBytes().length);
 				break;
 			} catch (ConnectException e) {
 			} catch (IOException e) {}
@@ -72,21 +75,32 @@ public class Client {
 		}
 	}
 	
+	public boolean hasSignedIn() {
+		return aWindow.userName.length()>0;
+	}
+	
 	public void disconnectFromServer() {
-		try {
-			String message = "//closing";
-			output.writeInt(message.getBytes().length);
-			output.write(message.getBytes(), 0, message.getBytes().length);
-			output.close();
-			input.close();
-			socket.close();
-		} catch (IOException e) {}
+		if(hasSignedIn()) {
+			try {
+				String message = "//closing";
+				output.writeInt(message.getBytes().length);
+				output.write(message.getBytes(), 0, message.getBytes().length);
+				output.close();
+				input.close();
+				socket.close();
+			} catch (IOException e) {}
+		}
 	}
 		
 	public static void main(String[] args) {
         Client aClient = new Client();
-		aClient.connectToServer();
-		while(aClient.aWindow.isOpen()) {
+        while(!aClient.hasSignedIn() && aClient.aWindow.open) {
+        	try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+        }
+        aClient.connectToServer();
+    	while(aClient.aWindow.open) {
 			aClient.sendMessage();
 			aClient.getMessage();
 			try {
