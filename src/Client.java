@@ -26,10 +26,35 @@ public class Client {
 			if(input.available() > 0) {
 				byte[] bytes = new byte[input.readInt()];
 				input.read(bytes,0,bytes.length);
-				aWindow.displayMessage(new String(bytes,0,bytes.length,"UTF-8"));
+				String message = new String(bytes,0,bytes.length,"UTF-8");
+				if(isSpecialMessage(message)) {
+					specialMessage(message);
+				} else
+					aWindow.displayMessage(message);
 			}
 		} catch (UnsupportedEncodingException e) {
 		} catch (IOException e) {}
+	}
+	
+	public void specialMessage(String s) {
+		String[] messageContents = s.substring(2).split("/");
+		if(messageContents[0].equals("removed")) {
+			for(int i=1;i<messageContents.length;i++)
+				aWindow.remove(messageContents[i]);
+		}
+		if(messageContents[0].equals("added")) {
+			for(int i=1;i<messageContents.length;i++)
+				aWindow.add(messageContents[i]);
+		}
+	}
+	
+	public boolean isSpecialMessage(String s) {
+		try{
+			if(s.substring(0, 2).equals("//"))
+				return true;
+		} catch (NullPointerException e1) {
+		} catch (IndexOutOfBoundsException e2) {}
+		return false;
 	}
 
 	public void connectToServer() {

@@ -24,7 +24,13 @@ public class Server {
 		try {
 			Socket socket = receiveServerSocket.accept();
 			User newUser = new User(socket);
-			newUser.sendMessage("Enter username: ");
+			if(users.size()>0) {
+				String listOfUsers = "";
+				for(User u : users)
+					if(u.hasUserName())
+						listOfUsers += "/" + u.getUserName();
+				newUser.sendMessage("//added"+listOfUsers);
+			}
 			users.add(newUser);
 		} catch (SocketTimeoutException e) {
 		} catch (IOException e) {}
@@ -33,38 +39,34 @@ public class Server {
 	public void cycleThroughUsers() {
 		for(int i=0;i<users.size();i++) {
 			User currentUser = users.get(i);
-			performAction(currentUser);
+			String message = currentUser.receiveMessage();
+			if(message!=null && !specialMessage(message, currentUser)) {
+				if(!currentUser.hasUserName()) {
+					currentUser.setUserName(message);
+					for(User someUser : users)
+						if(!someUser.equals(currentUser))
+							someUser.sendMessage("//added/"+currentUser.getUserName());
+				} else {
+					for(User aUser : users)
+						if(aUser.hasUserName())
+							aUser.sendMessageFrom(currentUser, message);
+				}
+			}
 		}
 	}
 	
 	public boolean specialMessage(String s, User u) {
-		if(s.equals(disconnectedMessage) && u.hasUserName()) {
-			String name = u.getUserName();
-			String goodbye = name+" has left the group.";
-			for(User aUser : users)
-				if(aUser.hasUserName() && aUser.getUserName()!=name)
-					aUser.sendMessage(goodbye);
+		if(s.equals(disconnectedMessage)) {
+			if(u.hasUserName()) {
+				for(User aUser : users) {
+					if(!aUser.equals(u))
+					aUser.sendMessage("//removed/"+u.getUserName());
+				}
+			}
 			users.remove(u);
 			return true;
 		}
 		return false;
-	}
-	
-	public void performAction(User u) {
-		String message = u.receiveMessage();
-		if(message!=null && !specialMessage(message, u)) {
-			if(!u.hasUserName()) {
-				u.setUserName(message);
-				String welcome = message + " has joined the group.";
-				for(User aUser : users)
-					if(aUser.hasUserName())
-						aUser.sendMessage(welcome);
-			} else {
-				for(User aUser : users)
-					if(aUser.hasUserName())
-						aUser.sendMessageFrom(u, message);
-			}
-		}
 	}
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
