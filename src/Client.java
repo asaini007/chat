@@ -76,6 +76,7 @@ public class Client {
 					byte[] bytes = new byte[input.readInt()];
 					input.read(bytes,0,bytes.length);
 					String response = new String(bytes,0,bytes.length,"UTF-8");
+					System.out.println(response);
 					specialMessage(response);
 	        	}
 	    		try {

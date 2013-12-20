@@ -47,8 +47,8 @@ public class Server {
 				if(tokens[0].equals("closing")) {
 					if(u.hasUserName()) {
 						for(User aUser : users) {
-							if(!aUser.equals(u))
-							aUser.sendMessage("//removed/"+u.getUserName());
+							if(!aUser.equals(u) && aUser.hasUserName())
+								aUser.sendMessage("//removed/"+u.getUserName());
 						}
 					} else
 						users.remove(u);
