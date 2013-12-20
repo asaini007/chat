@@ -5,11 +5,14 @@ import java.net.Socket;
 
 public class User {
 	private String name;
-	private Socket socket;
+	private String password;
+	public Socket socket;
+	public boolean connected;
 	
 	public User(Socket sock) {
 		socket = sock;
-		name = null;
+		name = "";
+		connected = true;
 	}
 	
 	public String getUserName() {
@@ -58,5 +61,13 @@ public class User {
 			}
 		} catch (IOException e) {}
 		return message;
+	}
+	
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String pass) {
+		password = pass;
 	}
 }

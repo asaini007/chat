@@ -38,14 +38,15 @@ public class Client {
 	
 	public void specialMessage(String s) {
 		String[] messageContents = s.substring(2).split("/");
-		if(messageContents[0].equals("removed")) {
-			for(int i=1;i<messageContents.length;i++)
-				aWindow.remove(messageContents[i]);
-		}
-		if(messageContents[0].equals("added")) {
+		if(messageContents[0].equals("removed"))
+			aWindow.remove(messageContents[1]);
+		if(messageContents[0].equals("added"))
 			for(int i=1;i<messageContents.length;i++)
 				aWindow.add(messageContents[i]);
-		}
+		if(messageContents[0].equals("success"))
+			aWindow.successfulSignIn();
+		if(messageContents[0].equals("failure"))
+			aWindow.failedSignIn();
 	}
 	
 	public boolean isSpecialMessage(String s) {
@@ -58,25 +59,39 @@ public class Client {
 	}
 
 	public void connectToServer() {
-		while(true) {
-			try {
-				socket = new Socket(InetAddress.getLocalHost(), 12543);
-				output = new DataOutputStream(socket.getOutputStream());
-				input = new DataInputStream(socket.getInputStream());
-				String message = aWindow.userName;
-				output.writeInt(message.getBytes().length);
-				output.write(message.getBytes(), 0, message.getBytes().length);
-				break;
-			} catch (ConnectException e) {
-			} catch (IOException e) {}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {}
-		}
+		try {
+			socket = new Socket(InetAddress.getLocalHost(), 12543);
+			output = new DataOutputStream(socket.getOutputStream());
+			input = new DataInputStream(socket.getInputStream());
+	        while(aWindow.open && !hasSignedIn()) {
+	        	if(hasLoginInfo()) {
+					String message = aWindow.existingUser ? "//existing/"+aWindow.username+"/"+aWindow.password : "//new/"+aWindow.username+"/"+aWindow.password;
+					output.writeInt(message.getBytes().length);
+					output.write(message.getBytes(), 0, message.getBytes().length);
+					while(input.available() == 0) {
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {}
+					}
+					byte[] bytes = new byte[input.readInt()];
+					input.read(bytes,0,bytes.length);
+					String response = new String(bytes,0,bytes.length,"UTF-8");
+					specialMessage(response);
+	        	}
+	    		try {
+	    			Thread.sleep(100);
+	    		} catch (InterruptedException e) {}
+	        }
+		} catch (ConnectException e) {
+		} catch (IOException e) {}
+	}
+	
+	public boolean hasLoginInfo() {
+		return aWindow.username.length()>0 && aWindow.password.length()>0;
 	}
 	
 	public boolean hasSignedIn() {
-		return aWindow.userName.length()>0;
+		return aWindow.signedIn;
 	}
 	
 	public void disconnectFromServer() {
@@ -94,12 +109,14 @@ public class Client {
 		
 	public static void main(String[] args) {
         Client aClient = new Client();
-        while(!aClient.hasSignedIn() && aClient.aWindow.open) {
+        while(!aClient.hasLoginInfo() && aClient.aWindow.open) {
         	try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
         }
-        aClient.connectToServer();
+        if(aClient.hasLoginInfo()) {
+        	aClient.connectToServer();
+        }
     	while(aClient.aWindow.open) {
 			aClient.sendMessage();
 			aClient.getMessage();

@@ -3,32 +3,35 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class ClientWindow {
-	String messageToSend, userName;
-	boolean open;
+	String messageToSend, username, password;
+	boolean open, existingUser, signedIn;
 	
 	JFrame frame;
-	JLabel userNameLabel, friendsLabel;
+	JLabel loginLabel, usernameLabel, passwordLabel, friendsLabel;
 	JTextField nameField, sendField;
-	JButton nameButton, sendButton, selectButton;
+	JButton newUserButton, loginButton, nameButton, sendButton, selectButton;
     JList<String> friendsList;
     DefaultListModel<String> listModel;
     JTextArea chatHistory;
     JScrollPane areaScrollPane, listScrollPane;
+    JPasswordField passField;
     
     public ClientWindow() {
     	messageToSend = "";
-    	userName = "";
+    	username = "";
+    	password = "";
     	open = true;
+    	signedIn = false;
     	SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	createAndShowUserNameGUI();
+            	createAndShowLoginGUI();
             }
         });
     }
     
-    public void createAndShowUserNameGUI() {
-    	frame = new JFrame("Log in");
-    	frame.setContentPane(getUserNameContentPane());
+    public void createAndShowLoginGUI() {
+    	frame = new JFrame("Sign in");
+    	frame.setContentPane(getLoginContentPane());
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
         	public void windowClosing(WindowEvent e) {
@@ -40,66 +43,110 @@ public class ClientWindow {
         frame.setResizable(false);
     }
     
-	public JPanel getUserNameContentPane() {
-		JPanel userGUI = new JPanel();
-		userGUI.setLayout(new GridBagLayout());
+	public JPanel getLoginContentPane() {
+		JPanel loginGUI = new JPanel();
+		loginGUI.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         
-        userNameLabel = new JLabel("Enter User Name:");
+        loginLabel = new JLabel("Sign in");
         c.gridx = 0;
         c.gridy = 0;
-        c.gridwidth = 1;
+        c.gridwidth = 2;
         c.gridheight = 1;
         c.weightx = 1;
-        c.weighty = 0.33;
+        c.weighty = 0.25;
         c.fill = GridBagConstraints.NONE;
-        userGUI.add(userNameLabel, c);
+        loginGUI.add(loginLabel, c);
         
-        nameField = new JTextField();
-        nameField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String name = nameField.getText();
-	    		if(!name.equals("")) {
-	    			userName = name;
-	    			createAndShowGUI();
-	    		}
-			}
-        });
+        usernameLabel = new JLabel("Username");
         c.gridx = 0;
         c.gridy = 1;
         c.gridwidth = 1;
         c.gridheight = 1;
-        c.weightx = 1;
-        c.weighty = 0.33;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        userGUI.add(nameField, c);
+        c.weightx = 0;
+        c.weighty = 0.25;
+        c.fill = GridBagConstraints.NONE;
+        loginGUI.add(usernameLabel, c);
         
-        nameButton = new JButton("Enter");
+        nameField = new JTextField();
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.25;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        loginGUI.add(nameField, c);
+        
+        passwordLabel = new JLabel("Password");
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 1;
         c.gridheight = 1;
-        c.weightx = 1;
-        c.weighty = 0.33;
+        c.weightx = 0;
+        c.weighty = 0.25;
         c.fill = GridBagConstraints.NONE;
-        nameButton.addActionListener(new ActionListener() {
+        loginGUI.add(passwordLabel, c);
+        
+        passField = new JPasswordField();
+        c.gridx = 1;
+        c.gridy = 2;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.25;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        loginGUI.add(passField, c);
+        
+        loginButton = new JButton("Sign in");
+        c.gridx = 1;
+        c.gridy = 3;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.25;
+        c.fill = GridBagConstraints.BOTH;
+        loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String name = nameField.getText();
-	    		if(!name.equals("")) {
-	    			userName = name;
-	    			createAndShowGUI();
+				String pass = new String(passField.getPassword());
+	    		if(!name.equals("") && pass!=("")) {
+	    			username = name;
+	    			password = pass;
+	    			existingUser = true;
 	    		}
 			}
         });
-        userGUI.add(nameButton, c);
+        loginGUI.add(loginButton, c);
         
-        userGUI.setOpaque(true);
-        return userGUI;
+        newUserButton = new JButton("New User");
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 0;
+        c.weighty = 0.25;
+        c.fill = GridBagConstraints.NONE;
+        newUserButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String name = nameField.getText();
+				String pass = new String(passField.getPassword());
+	    		if(!name.equals("") && pass!=("")) {
+	    			username = name;
+	    			password = pass;
+	    			existingUser = false;
+	    		}
+			}
+        });
+        loginGUI.add(newUserButton, c);
+        
+        loginGUI.setOpaque(true);
+        return loginGUI;
 	}
 
 	public void createAndShowGUI() {
 		frame.dispose();
-        frame = new JFrame(userName);
+        frame = new JFrame(username);
         frame.setContentPane(getContentPane());
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
@@ -205,6 +252,18 @@ public class ClientWindow {
         return totalGUI;
     }
 	
+	public void successfulSignIn() {
+		signedIn = true;
+		createAndShowGUI();
+	}
+	
+	public void failedSignIn() {
+		signedIn = false;
+		username = "";
+		password = "";
+		loginLabel.setText("Failed");
+	}
+	
 	public String getMessage() {
 		String toReturn = messageToSend;
 		messageToSend = "";
@@ -217,7 +276,7 @@ public class ClientWindow {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {}
 		}
-		chatHistory.append(line+"\n");
+		chatHistory.append(line);
 	}
 	
 	public void remove(String s) {
