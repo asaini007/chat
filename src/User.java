@@ -32,12 +32,14 @@ public class User {
 	}
 	
 	public void sendMessage(String message) {
-		DataOutputStream output;
-		try {
-			output = new DataOutputStream(socket.getOutputStream());
-			output.writeInt(message.getBytes().length);
-			output.write(message.getBytes(), 0, message.getBytes().length);
-		} catch (IOException e) {}
+		if(connected) {
+			DataOutputStream output;
+			try {
+				output = new DataOutputStream(socket.getOutputStream());
+				output.writeInt(message.getBytes().length);
+				output.write(message.getBytes(), 0, message.getBytes().length);
+			} catch (IOException e) {}
+		}
 	}
 	
 	public void sendMessageFrom(User otherUser, String message) {
