@@ -11,29 +11,24 @@ public class Client {
 		aWindow  = new ClientWindow();
 	}
   
-	public void sendMessage() {
+	public void sendMessage() throws IOException {
 		if(aWindow.messageToSend.length()>0) {
-			try {
-    			String message = aWindow.getMessage();
-				output.writeInt(message.getBytes().length);
-				output.write(message.getBytes(), 0, message.getBytes().length);
-			} catch (IOException e1) {}
+			String message = aWindow.getMessage();
+			output.writeInt(message.getBytes().length);
+			output.write(message.getBytes(), 0, message.getBytes().length);
 		}
 	}
 	
-	public void getMessage() {
-		try {
-			if(input.available() > 0) {
-				byte[] bytes = new byte[input.readInt()];
-				input.read(bytes,0,bytes.length);
-				String message = new String(bytes,0,bytes.length,"UTF-8");
-				if(isSpecialMessage(message)) {
-					specialMessage(message);
-				} else
-					aWindow.displayMessage(message);
-			}
-		} catch (UnsupportedEncodingException e) {
-		} catch (IOException e) {}
+	public void getMessage() throws UnsupportedEncodingException, IOException {
+		if(input.available() > 0) {
+			byte[] bytes = new byte[input.readInt()];
+			input.read(bytes,0,bytes.length);
+			String message = new String(bytes,0,bytes.length,"UTF-8");
+			if(isSpecialMessage(message)) {
+				specialMessage(message);
+			} else
+				aWindow.displayMessage(message);
+		}
 	}
 	
 	public void specialMessage(String s) {
@@ -107,7 +102,7 @@ public class Client {
 		}
 	}
 		
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
         Client aClient = new Client();
         while(!aClient.hasLoginInfo() && aClient.aWindow.open) {
         	try {

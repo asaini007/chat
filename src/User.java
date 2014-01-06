@@ -4,72 +4,42 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class User {
-	private String name;
-	private String password;
+	public String username;
+	public String password;
 	public Socket socket;
 	public boolean connected;
 	
 	public User(Socket sock) {
 		socket = sock;
-		name = "";
+		username = "";
 		connected = true;
 	}
 	
-	public String getUserName() {
-		return name;
-	}
-	
-	public void setUserName(String userName) {
-		name = userName;
-	}
-	
 	public boolean hasUserName() {
-		return !(name==null);
+		return !(username==null);
 	}
 	
 	public boolean equals(User otherUser) {
-		return (otherUser.getUserName()  == getUserName()) ? true : false;
+		return (otherUser.username.equals(username)) ? true : false;
 	}
 	
-	public void sendMessage(String message) {
-		if(connected) {
+	public void sendMessage(String message) throws IOException {
+		if(hasUserName() && connected) {
 			DataOutputStream output;
-			try {
-				output = new DataOutputStream(socket.getOutputStream());
-				output.writeInt(message.getBytes().length);
-				output.write(message.getBytes(), 0, message.getBytes().length);
-			} catch (IOException e) {}
+			output = new DataOutputStream(socket.getOutputStream());
+			output.writeInt(message.getBytes().length);
+			output.write(message.getBytes(), 0, message.getBytes().length);
 		}
 	}
 	
-	public void sendMessageFrom(User otherUser, String message) {
-		DataOutputStream output;
-		try {
-			output = new DataOutputStream(socket.getOutputStream());
-			message=otherUser.getUserName()+": "+message;
-			output.writeInt(message.getBytes().length);
-			output.write(message.getBytes(), 0, message.getBytes().length);
-		} catch (IOException e) {}
-	}
-	
-	public String receiveMessage() {
+	public String receiveMessage() throws IOException {
 		String message = null;
-		try {
-			DataInputStream input = new DataInputStream(socket.getInputStream());
-			if(input.available() > 0) {
-				byte[] bytes = new byte[input.readInt()];
-				input.read(bytes,0,bytes.length);
-				message = new String(bytes,0,bytes.length,"UTF-8");
-			}
-		} catch (IOException e) {}
+		DataInputStream input = new DataInputStream(socket.getInputStream());
+		if(input.available() > 0) {
+			byte[] bytes = new byte[input.readInt()];
+			input.read(bytes,0,bytes.length);
+			message = new String(bytes,0,bytes.length,"UTF-8");
+		}
 		return message;
-	}
-	
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String pass) {
-		password = pass;
 	}
 }

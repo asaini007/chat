@@ -38,7 +38,7 @@ public class ClientWindow {
         		open = false;
         	}
         });
-        frame.setSize(new Dimension(300,300));
+        frame.setSize(new Dimension(300,200));
         frame.setVisible(true);
         frame.setResizable(false);
     }
@@ -105,7 +105,7 @@ public class ClientWindow {
         c.gridheight = 1;
         c.weightx = 1;
         c.weighty = 0.25;
-        c.fill = GridBagConstraints.BOTH;
+        c.fill = GridBagConstraints.NONE;
         loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String name = nameField.getText();
@@ -276,7 +276,7 @@ public class ClientWindow {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {}
 		}
-		chatHistory.append(line);
+		chatHistory.append((chatHistory.getText().equals("")) ? line : "\n"+line);
 	}
 	
 	public void remove(String s) {
