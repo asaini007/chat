@@ -11,24 +11,27 @@ public class User {
 	
 	public User(Socket sock) {
 		socket = sock;
-		username = "";
 		connected = true;
 	}
 	
-	public boolean hasUserName() {
-		return !(username==null);
-	}
-	
 	public boolean equals(User otherUser) {
-		return (otherUser.username.equals(username)) ? true : false;
+		if(otherUser.hasUserInfo() && hasUserInfo())
+			return otherUser.username.equals(username);
+		else return false;
 	}
 	
-	public void sendMessage(String message) throws IOException {
-		if(hasUserName() && connected) {
+	public boolean hasUserInfo() {
+		return (username!=null && password!=null);
+	}
+	
+	public void sendMessage(String message) {
+		if(connected) {
 			DataOutputStream output;
-			output = new DataOutputStream(socket.getOutputStream());
-			output.writeInt(message.getBytes().length);
-			output.write(message.getBytes(), 0, message.getBytes().length);
+			try {
+				output = new DataOutputStream(socket.getOutputStream());
+				output.writeInt(message.getBytes().length);
+				output.write(message.getBytes(), 0, message.getBytes().length);
+			} catch (IOException e) {}
 		}
 	}
 	
