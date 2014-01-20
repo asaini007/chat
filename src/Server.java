@@ -34,10 +34,14 @@ public class Server {
 					String type = message.split("/")[0];
 					if(type.equals("message"))
 						sendMessage(message, currentUser);
-					else if(type.equals("closing"))
-						exitAction(message, currentUser);
-					else if(type.equals("existing"))
-						addExisting(message, currentUser);
+					else if(type.equals("closing")) {
+						if(exitAction(message, currentUser))
+							it.remove();
+					}
+					else if(type.equals("existing")) {
+						if(addExisting(message, currentUser))
+							it.remove();
+					}
 					else if(type.equals("new"))
 						addNew(message, currentUser);
 				}
@@ -59,19 +63,22 @@ public class Server {
 		}
 	}
 	
-	public void exitAction(String s, User u) throws IOException {
+	public boolean exitAction(String s, User u) throws IOException {
+		boolean remove = false;
 		if(u.username!=null) {
 			for(User aUser : users) {
 				if(!aUser.equals(u))
 					aUser.sendMessage("removed/"+u.username);
 			}
 		} else
-			users.remove(u);
+			remove =true;;
 		u.connected = false;
 		u.socket.close();
+		return remove;
 	}
 	
-	public void addExisting(String s, User u) throws IOException {
+	public boolean addExisting(String s, User u) throws IOException {
+		boolean remove = false;
 		String[] tokens = s.split("/");
 		String user = tokens[1];
 		String pass = tokens[2];
@@ -85,13 +92,14 @@ public class Server {
 			}
 		}
 		if(match!=null && pass.equals(match.password) && !match.connected) {
-			users.remove(u);
+			remove = true;
 			u.connected = false;
 			match.socket = u.socket;
 			match.connected = true;
 			addAction(match);
 		} else
 			u.sendMessage("failure");
+		return remove;
 	}
 	
 	public void addNew(String s, User u) throws IOException {
