@@ -159,6 +159,7 @@ public class Client {
         	}
         });
         listFrame.setSize(new Dimension(200,300));
+        listFrame.setResizable(false);
         listFrame.setVisible(true);
     }
 	
@@ -345,8 +346,14 @@ public class Client {
 				// if chatting with user, display "[user] has disconnected"
 			}
 			else if(type.equals("added"))
-				for(int i=1;i<messageContents.length;i++)
+				for(int i=1;i<messageContents.length;i++) {
+					while(listModel == null) {
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {}
+					}
 					listModel.addElement(messageContents[i]);
+				}
 			else if(type.equals("success")) {
 				signedIn = true;
 				loginFrame.dispose();

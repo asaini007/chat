@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class Server {
 	ServerSocket receiveServerSocket;
@@ -24,7 +25,9 @@ public class Server {
 	}
 	
 	public void cycleThroughUsers() throws IndexOutOfBoundsException, IOException {
-		for(User currentUser : users) {
+		Iterator<User> it = users.iterator();
+		while(it.hasNext()) {
+			User currentUser = it.next();
 			if(currentUser.connected) {
 				String message = currentUser.receiveMessage();
 				if(message!=null) {
@@ -73,9 +76,14 @@ public class Server {
 		String user = tokens[1];
 		String pass = tokens[2];
 		User match = null;
-		for(User aUser : users)
-			if(aUser.equals(user))
-				match = aUser;
+		Iterator<User> tempIt = users.iterator();
+		while(tempIt.hasNext()) {
+			User tempUser = tempIt.next();
+			if(tempUser.hasUserInfo() && user.equals(tempUser.username)) {
+				match = tempUser;
+				break;
+			}
+		}
 		if(match!=null && pass.equals(match.password) && !match.connected) {
 			users.remove(u);
 			u.connected = false;
