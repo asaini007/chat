@@ -107,11 +107,12 @@ public class Server {
 		String userName = tokens[1];
 		String passWord = tokens[2];
 		boolean exists = false;
-		for(User aUser : users) 
+		for(User aUser : users) {
 			if(aUser.hasUserInfo() && aUser.username.equals(userName)) {
 				exists = true;
 				break;
 			}
+		}
 		if(!exists) {
 			u.username = userName;
 			u.password = passWord;
@@ -123,7 +124,7 @@ public class Server {
 	public void addAction(User u) {
 		u.sendMessage("success");
 		for(User aUser : users) {
-			if(!aUser.equals(u)) {
+			if(aUser.hasUserInfo() && !aUser.equals(u)) {
 				aUser.sendMessage("added/"+u.username);
 			}
 		}

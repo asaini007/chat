@@ -159,7 +159,7 @@ public class Client {
         	}
         });
         listFrame.setSize(new Dimension(200,300));
-        listFrame.setResizable(false);
+        listFrame.setResizable(true);
         listFrame.setVisible(true);
     }
 	
@@ -220,7 +220,7 @@ public class Client {
         c.gridy = 0;
         c.gridwidth = 1;
         c.gridheight = 1;
-        c.weightx = 1.0/(1.0/(double)chatPanels.size());
+        c.weightx = 1.0/(double)chatPanels.size();
         c.weighty = 0;
         c.fill = GridBagConstraints.NONE;
         listGUI.add(friendsLabel, c);
@@ -229,18 +229,18 @@ public class Client {
         c.gridy = 1;
         c.gridwidth = 1;
         c.gridheight = 1;
-        c.weightx = 1.0/(1.0/(double)chatPanels.size());
+        c.weightx = 1.0/(double)chatPanels.size();
         c.weighty = 1;
         c.fill = GridBagConstraints.BOTH;
         listGUI.add(listScrollPane, c);
-        
+
+    	c.gridy = 0;
+    	c.gridwidth = 1;
+        c.gridheight = 2;
+        c.weightx = 1.0/(double)chatPanels.size();
+        c.weighty = 1;
         for(JPanel chatPanel : chatPanels) {
         	c.gridx++;
-        	c.gridy = 0;
-        	c.gridwidth = 1;
-            c.gridheight = 2;
-            c.weightx = 1.0/(1.0/(double)chatPanels.size());
-            c.weighty = 1;
             c.fill = GridBagConstraints.BOTH;
             listGUI.add(chatPanel, c);
         }
@@ -330,37 +330,39 @@ public class Client {
 		}
 	} */
 	
-	public void getMessage() throws UnsupportedEncodingException, IOException {
-		if(input.available() > 0) {
-			byte[] bytes = new byte[input.readInt()];
-			input.read(bytes,0,bytes.length);
-			String message = new String(bytes,0,bytes.length,"UTF-8");
-			String[] messageContents = message.split("/");
-			String type = messageContents[0];
-			if(type.equals("message"))
-				;
-			else if(type.equals("ownmessage"))
-				;
-			else if(type.equals("removed")) {
-				listModel.removeElement(messageContents[1]);
-				// if chatting with user, display "[user] has disconnected"
-			}
-			else if(type.equals("added"))
-				for(int i=1;i<messageContents.length;i++) {
-					while(listModel == null) {
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {}
-					}
-					listModel.addElement(messageContents[i]);
+	public void getMessage() {
+		try {
+			if(input.available() > 0) {
+				byte[] bytes = new byte[input.readInt()];
+				input.read(bytes,0,bytes.length);
+				String message = new String(bytes,0,bytes.length,"UTF-8");
+				String[] messageContents = message.split("/");
+				String type = messageContents[0];
+				if(type.equals("message"))
+					;
+				else if(type.equals("ownmessage"))
+					;
+				else if(type.equals("removed")) {
+					listModel.removeElement(messageContents[1]);
+					// if chatting with user, display "[user] has disconnected"
 				}
-			else if(type.equals("success")) {
-				signedIn = true;
-				loginFrame.dispose();
-				createAndShowListGUI();
-			} else if(type.equals("failure"))
-				loginLabel.setText("The username or password you enterred is incorrect");
-		}
+				else if(type.equals("added"))
+					for(int i=1;i<messageContents.length;i++) {
+						while(listModel == null) {
+							try {
+								Thread.sleep(100);
+							} catch (InterruptedException e) {}
+						}
+						listModel.addElement(messageContents[i]);
+					}
+				else if(type.equals("success")) {
+					signedIn = true;
+					loginFrame.dispose();
+					createAndShowListGUI();
+				} else if(type.equals("failure"))
+					loginLabel.setText("The username or password you enterred is incorrect");
+			}
+		} catch (IOException e) {}
 	}
 	
 	public void connectToServer(String username, String password, boolean existing) {
