@@ -17,7 +17,7 @@ public class User {
 	public boolean equals(User otherUser) {
 		if(otherUser.hasUserInfo() && hasUserInfo())
 			return otherUser.username.equals(username);
-		else return false;
+		return false;
 	}
 	
 	public boolean hasUserInfo() {

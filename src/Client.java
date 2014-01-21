@@ -147,106 +147,55 @@ public class Client {
         return loginGUI;
 	}
 
-	public void createAndShowListGUI() {
-		chatPanels = new HashSet<JPanel>();
-        listFrame = new JFrame("Online Users");
-        listFrame.setContentPane(getListContentPane());
-        listFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        listFrame.addWindowListener(new WindowAdapter() {
-        	public void windowClosing(WindowEvent e) {
-        		disconnectFromServer();
-        		listClose();
-        	}
-        });
-        listFrame.setSize(new Dimension(200,300));
-        listFrame.setResizable(true);
+	public void updateAndShowListGUI() {
+        if(listFrame == null) {
+        	listFrame = new JFrame("Online Users");
+            listFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            listFrame.addWindowListener(new WindowAdapter() {
+            	public void windowClosing(WindowEvent e) {
+            		disconnectFromServer();
+            		listClose();
+            	}
+            });
+            listFrame.setResizable(true);
+            listFrame.setSize(new Dimension(200,300));
+        }
+        listFrame.setSize(new Dimension(listFrame.getWidth()+200,listFrame.getHeight()));
+    	listFrame.setContentPane(getListContentPane());
         listFrame.setVisible(true);
     }
 	
-	public JPanel getListContentPane (){
-        JPanel listGUI = new JPanel();
-        listGUI.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-
-        friendsLabel = new JLabel("Online Users:");
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.gridheight = 1;
-        c.weightx = 1;
-        c.weighty = 0;
-        c.fill = GridBagConstraints.NONE;
-        listGUI.add(friendsLabel, c);
-        
-        listModel = new DefaultListModel<String>();
-        friendsList = new JList<String>(listModel);
-        friendsList.addMouseListener(new MouseAdapter() {
-        	public void mouseClicked(MouseEvent event) {
-                if(event.getClickCount() == 2) {
-                	Rectangle r = friendsList.getCellBounds(0, friendsList.getLastVisibleIndex());
-					if(r != null && r.contains(event.getPoint())) {
-                		int index = friendsList.locationToIndex(event.getPoint());
-                		createNewWindow((String)listModel.get(index));
-					}
-                }
-            }
-        });
-        listScrollPane = new JScrollPane(friendsList);
-        listScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridwidth = 1;
-        c.gridheight = 1;
-        c.weightx = 1;
-        c.weighty = 1;
-        c.fill = GridBagConstraints.BOTH;
-        listGUI.add(listScrollPane, c);
-        
-        listGUI.setOpaque(true);
-        return listGUI;
-    }
-	
-	public void updateAndShowListGUI() {
-        listFrame.setSize(new Dimension(200*(1+chatPanels.size()),300));
-		listFrame.setContentPane(updateListFrameContentPane());
-	}
-	
-	public JPanel updateListFrameContentPane() {
-		JPanel listGUI = new JPanel();
-        listGUI.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.gridheight = 1;
-        c.weightx = 1.0/(double)chatPanels.size();
-        c.weighty = 0;
-        c.fill = GridBagConstraints.NONE;
-        listGUI.add(friendsLabel, c);
-        
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridwidth = 1;
-        c.gridheight = 1;
-        c.weightx = 1.0/(double)chatPanels.size();
-        c.weighty = 1;
-        c.fill = GridBagConstraints.BOTH;
-        listGUI.add(listScrollPane, c);
-
-    	c.gridy = 0;
-    	c.gridwidth = 1;
-        c.gridheight = 2;
-        c.weightx = 1.0/(double)chatPanels.size();
-        c.weighty = 1;
-        for(JPanel chatPanel : chatPanels) {
-        	c.gridx++;
-            c.fill = GridBagConstraints.BOTH;
-            listGUI.add(chatPanel, c);
-        }
-        
-        listGUI.setOpaque(true);
-        return listGUI;
+	public JPanel getListContentPane() {
+		if(chatPanels.size()==0) {
+	        friendsLabel = new JLabel("Online Users:");
+	        friendsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+	        
+	        listModel = new DefaultListModel<String>();
+	        friendsList = new JList<String>(listModel);
+	        friendsList.addMouseListener(new MouseAdapter() {
+	        	public void mouseClicked(MouseEvent event) {
+	                if(event.getClickCount() == 2) {
+	                	Rectangle r = friendsList.getCellBounds(0, friendsList.getLastVisibleIndex());
+						if(r != null && r.contains(event.getPoint())) {
+	                		int index = friendsList.locationToIndex(event.getPoint());
+	                		createNewWindow((String)listModel.get(index));
+						}
+	                }
+	            }
+	        });
+	        listScrollPane = new JScrollPane(friendsList);
+	        listScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		}
+		JPanel mainPane = new JPanel();
+		mainPane.setLayout(new GridLayout(1,0));
+		JPanel listPanel = new JPanel();
+		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.add(friendsLabel);        
+        listPanel.add(listScrollPane);
+        mainPane.add(listPanel);
+        for(JPanel chatPanel : chatPanels)
+        	mainPane.add(chatPanel);
+        return mainPane;
 	}
 	
 	public void createNewWindow(String userName) {
@@ -270,7 +219,6 @@ public class Client {
 	        c.weighty = 0;
 	        c.fill = GridBagConstraints.NONE;
 	        chatPanel.add(name, c);
-	        
 	        
 	        JTextArea chatHistory = new JTextArea();
 	        chatHistory.setLineWrap(true);
@@ -357,8 +305,9 @@ public class Client {
 					}
 				else if(type.equals("success")) {
 					signedIn = true;
+					chatPanels = new HashSet<JPanel>();
 					loginFrame.dispose();
-					createAndShowListGUI();
+					updateAndShowListGUI();
 				} else if(type.equals("failure"))
 					loginLabel.setText("The username or password you enterred is incorrect");
 			}
