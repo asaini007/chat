@@ -67,7 +67,6 @@ public class Client {
     	loginFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     	loginFrame.addWindowListener(new WindowAdapter() {
         	public void windowClosing(WindowEvent e) {
-        		disconnectFromServer();
         		loginClose();
         	}
         });
@@ -179,7 +178,6 @@ public class Client {
             listFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             listFrame.addWindowListener(new WindowAdapter() {
             	public void windowClosing(WindowEvent e) {
-            		disconnectFromServer();
             		listClose();
             	}
             });
@@ -320,10 +318,8 @@ public class Client {
 					getNewMessage(messageContents);
 				else if(type.equals("ownmessage"))
 					getOwnMessage(messageContents);
-				else if(type.equals("removed")) {
-					listModel.removeElement(messageContents[1]);
-					// if chatting with user, display "[user] has disconnected"
-				}
+				else if(type.equals("removed"))
+					removeUser(messageContents[1]);
 				else if(type.equals("added"))
 					for(int i=1;i<messageContents.length;i++) {
 						while(listModel == null) {
@@ -344,15 +340,36 @@ public class Client {
 		} catch (IOException e) {}
 	}
 	
+	public void removeUser(String user) {
+		listModel.removeElement(user);
+		for(JPanel chatPanel : chatPanels)
+			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
+				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
+				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? user+" has disconnected" : "\n"+user+" has disconnected");
+			}
+	}
+	
 	public void getNewMessage(String[] messageContents) {
 		String fromUser = messageContents[1];
 		String message = messageContents[2];
+		boolean exists = false;
 		for(JPanel chatPanel : chatPanels)
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(fromUser)) {
 				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
 				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? fromUser+": "+message : "\n"+fromUser+": "+message);
+				exists = true;
 				break;
 			}
+		if(!exists) {
+			createNewWindow(fromUser);
+			for(JPanel chatPanel : chatPanels)
+				if(((JLabel) chatPanel.getComponent(0)).getText().equals(fromUser)) {
+					JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
+					textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? fromUser+": "+message : "\n"+fromUser+": "+message);
+					exists = true;
+					break;
+				}
+		}
 	}
 	
 	public void getOwnMessage(String[] messageContents) {
@@ -361,7 +378,7 @@ public class Client {
 		for(JPanel chatPanel : chatPanels)
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
 				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
-				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? "me: "+message : "\nme: "+": "+message);
+				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? "me: "+message : "\nme: "+message);
 				break;
 			}
 	}
@@ -391,17 +408,17 @@ public class Client {
 	}
 	
 	public void loginClose() {
+		disconnectFromServer();
 		try {
 			loginFrame.dispose();
-			// other miscellaneous closing actions
 			System.exit(0);
 		} catch (NullPointerException e) {};
 	}
 	
 	public void listClose() {
+		disconnectFromServer();
 		try {
 			listFrame.dispose();
-			// other miscellaneous closing actions
 			System.exit(0);
 		} catch (NullPointerException e) {};
 	}
