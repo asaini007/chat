@@ -1,9 +1,35 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.net.*;
-import java.util.HashSet;
-import javax.swing.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.ArrayList;
+
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
 public class Client {
 	Socket socket;
@@ -12,7 +38,7 @@ public class Client {
 	boolean signedIn;
 	
 	JFrame loginFrame, listFrame;
-	HashSet<JPanel> chatPanels;
+	ArrayList<JPanel> chatPanels;
 	JLabel loginLabel, usernameLabel, passwordLabel, friendsLabel;
 	JTextField nameField, sendField;
 	JPasswordField passField;
@@ -45,7 +71,7 @@ public class Client {
         		loginClose();
         	}
         });
-    	loginFrame.setSize(new Dimension(350,150));
+    	loginFrame.setSize(new Dimension(300,150));
     	loginFrame.setVisible(true);
     	loginFrame.setResizable(false);
     }
@@ -158,7 +184,7 @@ public class Client {
             	}
             });
             listFrame.setResizable(true);
-            listFrame.setSize(new Dimension(200,300));
+            listFrame.setSize(new Dimension(0,300));
         }
         listFrame.setSize(new Dimension(listFrame.getWidth()+200,listFrame.getHeight()));
     	listFrame.setContentPane(getListContentPane());
@@ -235,9 +261,11 @@ public class Client {
 	        chatPanel.add(areaScrollPane, c);
 	        
 	        sendField = new JTextField();
+	        sendField.setName(userName);
 	        sendField.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					// sendMessage
+					if(sendField.getText() != null && !sendField.getText().equals(""))
+						sendMessage(sendField);
 				}
 	        });
 	        c.gridx = 0;
@@ -259,7 +287,8 @@ public class Client {
 	        c.fill = GridBagConstraints.NONE;
 	        sendButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					// sendMessage
+					if(sendField.getText() != null && !sendField.getText().equals(""))
+						sendMessage(sendField);
 				}
 	        });
 	        chatPanel.add(sendButton, c);
@@ -270,13 +299,14 @@ public class Client {
 		}
 	}
 	
-/*	public void sendMessage() throws IOException {
-		if(aWindow.messageToSend.length()>0) {
-			String message = aWindow.getMessage();
+	public void sendMessage(JTextField field) {
+		String message = "message/"+field.getName()+"/"+field.getText();
+		field.setText("");
+		try {
 			output.writeInt(message.getBytes().length);
 			output.write(message.getBytes(), 0, message.getBytes().length);
-		}
-	} */
+		} catch (IOException e) {}
+	}
 	
 	public void getMessage() {
 		try {
@@ -287,9 +317,9 @@ public class Client {
 				String[] messageContents = message.split("/");
 				String type = messageContents[0];
 				if(type.equals("message"))
-					;
+					getNewMessage(messageContents);
 				else if(type.equals("ownmessage"))
-					;
+					getOwnMessage(messageContents);
 				else if(type.equals("removed")) {
 					listModel.removeElement(messageContents[1]);
 					// if chatting with user, display "[user] has disconnected"
@@ -305,13 +335,35 @@ public class Client {
 					}
 				else if(type.equals("success")) {
 					signedIn = true;
-					chatPanels = new HashSet<JPanel>();
+					chatPanels = new ArrayList<JPanel>();
 					loginFrame.dispose();
 					updateAndShowListGUI();
 				} else if(type.equals("failure"))
-					loginLabel.setText("The username or password you enterred is incorrect");
+					loginLabel.setText("Login failed");
 			}
 		} catch (IOException e) {}
+	}
+	
+	public void getNewMessage(String[] messageContents) {
+		String fromUser = messageContents[1];
+		String message = messageContents[2];
+		for(JPanel chatPanel : chatPanels)
+			if(((JLabel) chatPanel.getComponent(0)).getText().equals(fromUser)) {
+				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
+				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? fromUser+": "+message : "\n"+fromUser+": "+message);
+				break;
+			}
+	}
+	
+	public void getOwnMessage(String[] messageContents) {
+		String user = messageContents[1];
+		String message = messageContents[2];
+		for(JPanel chatPanel : chatPanels)
+			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
+				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
+				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? "me: "+message : "\nme: "+": "+message);
+				break;
+			}
 	}
 	
 	public void connectToServer(String username, String password, boolean existing) {
@@ -349,7 +401,6 @@ public class Client {
 	public void listClose() {
 		try {
 			listFrame.dispose();
-			// dispose all other frames
 			// other miscellaneous closing actions
 			System.exit(0);
 		} catch (NullPointerException e) {};
@@ -363,7 +414,6 @@ public class Client {
 			} catch (InterruptedException e) {}
     	}
     	while(true) {
-//			aClient.sendMessage();
 			aClient.getMessage();
 			try {
 				Thread.sleep(100);
