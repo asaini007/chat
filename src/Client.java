@@ -258,6 +258,7 @@ public class Client {
 	        
 	        JTextArea chatHistory = new JTextArea();
 	        chatHistory.setLineWrap(true);
+	        chatHistory.setWrapStyleWord(true);
 	        chatHistory.setEditable(false);
 	        areaScrollPane = new JScrollPane(chatHistory);
 	        areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -328,9 +329,9 @@ public class Client {
 				String[] messageContents = message.split("/");
 				String type = messageContents[0];
 				if(type.equals("message"))
-					getNewMessage(messageContents);
+					newMessage(messageContents);
 				else if(type.equals("ownmessage"))
-					getOwnMessage(messageContents);
+					ownMessage(messageContents);
 				else if(type.equals("removed"))
 					removeUser(messageContents[1]);
 				else if(type.equals("added"))
@@ -363,6 +364,7 @@ public class Client {
 				JTextField text = ((JTextField) chatPanel.getComponent(2));
 				text.removeActionListener(text.getActionListeners()[0]);
 				text.setEditable(false);
+				text.setText("");
 				JButton button = ((JButton) chatPanel.getComponent(3));
 				button.setText("Close");
 				button.removeActionListener(button.getActionListeners()[0]);
@@ -380,7 +382,7 @@ public class Client {
 			}
 	}
 	
-	public void getNewMessage(String[] messageContents) {
+	public void newMessage(String[] messageContents) {
 		String fromUser = messageContents[1];
 		String message = messageContents[2];
 		boolean exists = false;
@@ -405,7 +407,7 @@ public class Client {
 		}
 	}
 	
-	public void getOwnMessage(String[] messageContents) {
+	public void ownMessage(String[] messageContents) {
 		String user = messageContents[1];
 		String message = messageContents[2];
 		for(JPanel chatPanel : chatPanels)
