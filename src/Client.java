@@ -36,6 +36,7 @@ public class Client {
 	DataOutputStream output;
 	DataInputStream input;
 	boolean signedIn;
+	int panelwidth = 200;
 	
 	JFrame loginFrame, listFrame;
 	ArrayList<JPanel> chatPanels;
@@ -183,8 +184,13 @@ public class Client {
             });
             listFrame.setResizable(true);
             listFrame.setSize(new Dimension(200,200));
-        } else
-        	listFrame.setSize(new Dimension((listFrame.getWidth()/(chatPanels.size()))*(chatPanels.size()+1),listFrame.getHeight()));
+        } else {
+        	int numPanels = 0;
+        	for(JPanel chatPanel : chatPanels)
+        		if(chatPanel.isOpaque())
+        			numPanels++;
+        	listFrame.setSize(new Dimension(panelwidth*(numPanels+1),listFrame.getHeight()));
+        }
     	listFrame.setContentPane(getListContentPane());
         listFrame.setVisible(true);
     }
@@ -218,18 +224,24 @@ public class Client {
         listPanel.add(listScrollPane);
         mainPane.add(listPanel);
         for(JPanel chatPanel : chatPanels)
-        	mainPane.add(chatPanel);
+        	if(chatPanel.isOpaque())
+        		mainPane.add(chatPanel);
         return mainPane;
 	}
 	
 	public void createNewWindow(String userName) {
-		boolean exists = false;
+		JPanel cPanel = null;
 		for(JPanel chatBox : chatPanels)
 			if(((JLabel) chatBox.getComponent(0)).getText().equals(userName)) {
-				exists = true;
+				cPanel = chatBox;
 				break;
 			}
-		if(!exists) {
+		int numPanels = 0;
+    	for(JPanel panel : chatPanels)
+    		if(panel.isOpaque())
+    			numPanels++;
+        panelwidth = listFrame.getWidth()/(1+numPanels);
+		if(cPanel==null) {
 			JPanel chatPanel = new JPanel();
 			chatPanel.setLayout(new GridBagLayout());
 	        GridBagConstraints c = new GridBagConstraints();
@@ -293,8 +305,9 @@ public class Client {
 	        
 	        chatPanel.setOpaque(true);
 	        chatPanels.add(chatPanel);
-	        updateAndShowListGUI();
-		}
+		} else
+			cPanel.setOpaque(!cPanel.isOpaque());
+		updateAndShowListGUI();
 	}
 	
 	public void sendMessage(JTextField field) {
@@ -355,8 +368,11 @@ public class Client {
 		boolean exists = false;
 		for(JPanel chatPanel : chatPanels)
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(fromUser)) {
+				chatPanel.setOpaque(true);
+				updateAndShowListGUI();
 				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
 				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? fromUser+": "+message : "\n"+fromUser+": "+message);
+				textArea.setCaretPosition(textArea.getDocument().getLength());
 				exists = true;
 				break;
 			}
@@ -366,8 +382,7 @@ public class Client {
 				if(((JLabel) chatPanel.getComponent(0)).getText().equals(fromUser)) {
 					JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
 					textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? fromUser+": "+message : "\n"+fromUser+": "+message);
-					exists = true;
-					break;
+					textArea.setCaretPosition(textArea.getDocument().getLength());
 				}
 		}
 	}
@@ -379,6 +394,7 @@ public class Client {
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
 				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
 				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? "me: "+message : "\nme: "+message);
+				textArea.setCaretPosition(textArea.getDocument().getLength());
 				break;
 			}
 	}
