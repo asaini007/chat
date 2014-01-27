@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
@@ -18,9 +17,7 @@ public class Server {
 	
 	public void receiveNewConnection() throws IOException {
 		try {
-			Socket socket = receiveServerSocket.accept();
-			User newUser = new User(socket);
-			users.add(newUser);
+			users.add(new User(receiveServerSocket.accept()));
 		} catch (SocketTimeoutException e) {};
 	}
 	
@@ -55,7 +52,7 @@ public class Server {
 		String toSend = tokens[2];
 		User match = null;
 		for(User aUser : users)
-			if(aUser.username.equals(toUserName))
+			if(aUser.hasUserInfo() && aUser.username.equals(toUserName))
 				match = aUser;
 		if(match!=null && match.connected) {
 			match.sendMessage("message/"+fromUser.username+"/"+toSend);

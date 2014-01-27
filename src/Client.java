@@ -40,9 +40,9 @@ public class Client {
 	JFrame loginFrame, listFrame;
 	ArrayList<JPanel> chatPanels;
 	JLabel loginLabel, usernameLabel, passwordLabel, friendsLabel;
-	JTextField nameField, sendField;
+	JTextField nameField;
 	JPasswordField passField;
-	JButton newUserButton, loginButton, nameButton, sendButton, selectButton;
+	JButton newUserButton, loginButton, nameButton;
     JList<String> friendsList;
     DefaultListModel<String> listModel;
     JScrollPane areaScrollPane, listScrollPane;
@@ -174,7 +174,7 @@ public class Client {
 
 	public void updateAndShowListGUI() {
         if(listFrame == null) {
-        	listFrame = new JFrame("Online Users");
+        	listFrame = new JFrame(nameField.getText());
             listFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             listFrame.addWindowListener(new WindowAdapter() {
             	public void windowClosing(WindowEvent e) {
@@ -182,9 +182,9 @@ public class Client {
             	}
             });
             listFrame.setResizable(true);
-            listFrame.setSize(new Dimension(0,300));
-        }
-        listFrame.setSize(new Dimension(listFrame.getWidth()+200,listFrame.getHeight()));
+            listFrame.setSize(new Dimension(200,200));
+        } else
+        	listFrame.setSize(new Dimension((listFrame.getWidth()/(chatPanels.size()))*(chatPanels.size()+1),listFrame.getHeight()));
     	listFrame.setContentPane(getListContentPane());
         listFrame.setVisible(true);
     }
@@ -258,7 +258,7 @@ public class Client {
 	        c.fill = GridBagConstraints.BOTH;
 	        chatPanel.add(areaScrollPane, c);
 	        
-	        sendField = new JTextField();
+	        final JTextField sendField = new JTextField();
 	        sendField.setName(userName);
 	        sendField.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -275,7 +275,7 @@ public class Client {
 	        c.fill = GridBagConstraints.HORIZONTAL;
 	        chatPanel.add(sendField, c);
 	        
-	        sendButton = new JButton("Send");
+	        final JButton sendButton = new JButton("Send");
 	        c.gridx = 1;
 	        c.gridy = 2;
 	        c.gridwidth = 1;
