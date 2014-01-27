@@ -43,7 +43,7 @@ public class Client {
 	JLabel loginLabel, usernameLabel, passwordLabel, friendsLabel;
 	JTextField nameField;
 	JPasswordField passField;
-	JButton newUserButton, loginButton, nameButton;
+	JButton newUserButton, loginButton;
     JList<String> friendsList;
     DefaultListModel<String> listModel;
     JScrollPane areaScrollPane, listScrollPane;
@@ -196,7 +196,7 @@ public class Client {
     }
 	
 	public JPanel getListContentPane() {
-		if(chatPanels.size()==0) {
+		if(chatPanels.size()==0 && listModel==null) {
 	        friendsLabel = new JLabel("Online Users:");
 	        friendsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
 	        
@@ -355,10 +355,28 @@ public class Client {
 	
 	public void removeUser(String user) {
 		listModel.removeElement(user);
-		for(JPanel chatPanel : chatPanels)
+		for(final JPanel chatPanel : chatPanels)
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
 				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
 				textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? user+" has disconnected" : "\n"+user+" has disconnected");
+				textArea.setCaretPosition(textArea.getDocument().getLength());
+				JTextField text = ((JTextField) chatPanel.getComponent(2));
+				text.removeActionListener(text.getActionListeners()[0]);
+				text.setEditable(false);
+				JButton button = ((JButton) chatPanel.getComponent(3));
+				button.setText("Close");
+				button.removeActionListener(button.getActionListeners()[0]);
+				button.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						int numPanels = 0;
+						for(JPanel panel : chatPanels)
+				    		if(panel.isOpaque())
+				    			numPanels++;
+				        panelwidth = listFrame.getWidth()/(1+numPanels);
+				        chatPanels.remove(chatPanel);
+				        updateAndShowListGUI();
+					}
+				});
 			}
 	}
 	
