@@ -64,11 +64,11 @@ public class Server {
 		boolean remove = false;
 		if(u.username!=null) {
 			for(User aUser : users) {
-				if(!aUser.equals(u))
+				if(aUser.username!=null && !aUser.equals(u))
 					aUser.sendMessage("removed/"+u.username);
 			}
 		} else
-			remove =true;;
+			remove = true;
 		u.connected = false;
 		u.socket.close();
 		return remove;

@@ -35,7 +35,6 @@ public class Client {
 	Socket socket;
 	DataOutputStream output;
 	DataInputStream input;
-	boolean signedIn;
 	int panelwidth = 200;
 	
 	JFrame loginFrame, listFrame;
@@ -54,7 +53,6 @@ public class Client {
 			output = new DataOutputStream(socket.getOutputStream());
 			input = new DataInputStream(socket.getInputStream());
 		} catch (IOException e) {}
-		signedIn = false;
 		SwingUtilities.invokeLater(new Runnable() {
             public void run() {
             	createAndShowLoginGUI();
@@ -344,7 +342,6 @@ public class Client {
 						listModel.addElement(messageContents[i]);
 					}
 				else if(type.equals("success")) {
-					signedIn = true;
 					chatPanels = new ArrayList<JPanel>();
 					loginFrame.dispose();
 					updateAndShowListGUI();
@@ -355,6 +352,7 @@ public class Client {
 	}
 	
 	public void removeUser(String user) {
+		System.out.println("removing "+user);
 		listModel.removeElement(user);
 		for(final JPanel chatPanel : chatPanels)
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
@@ -461,7 +459,7 @@ public class Client {
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
         Client aClient = new Client();
-    	while(!aClient.signedIn) {
+    	while(aClient.listModel==null) {
     		try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
