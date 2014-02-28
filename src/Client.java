@@ -8,12 +8,13 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 public class Client {
 	Socket socket;
 	DataOutputStream output;
 	DataInputStream input;
-	boolean signedIn;
 	int panelwidth = 200;
 	
 	JFrame loginFrame, listFrame;
@@ -34,7 +35,6 @@ public class Client {
 			output = new DataOutputStream(socket.getOutputStream());
 			input = new DataInputStream(socket.getInputStream());
 		} catch (IOException e) {}
-		signedIn = false;
 		SwingUtilities.invokeLater(new Runnable() {
             public void run() {
             	createAndShowLoginGUI();
@@ -164,19 +164,13 @@ public class Client {
             });
             listFrame.setResizable(true);
             listFrame.setSize(new Dimension(200,200));
-        } else {
-        	int numPanels = 0;
-        	for(JPanel chatPanel : chatPanels)
-        		if(chatPanel.isOpaque())
-        			numPanels++;
-        	listFrame.setSize(new Dimension(panelwidth*(numPanels+1),listFrame.getHeight()));
         }
     	listFrame.setContentPane(getListContentPane());
         listFrame.setVisible(true);
     }
 	
 	public JPanel getListContentPane() {
-		if(chatPanels.size()==0 && onlineListModel==null) { 
+		if(chatPanels.size()==0 && onlineListModel==null) {
 	        onlineListModel = new DefaultListModel<String>();
 	        onlineFriendsList = new JList<String>(onlineListModel);
 	        onlineFriendsList.addMouseListener(new MouseAdapter() {
@@ -200,7 +194,7 @@ public class Client {
 	                if(event.getClickCount() == 2) {
 	                	Rectangle r = offlineFriendsList.getCellBounds(0, offlineFriendsList.getLastVisibleIndex());
 						if(r != null && r.contains(event.getPoint())) {
-	                		// int index = offlineFriendsList.locationToIndex(event.getPoint());
+							// int index = offlineFriendsList.locationToIndex(event.getPoint());
 	                		// createNewWindow((String)offlineListModel.get(index));
 						}
 	                }
@@ -364,6 +358,11 @@ public class Client {
 	        chatPanels.add(chatPanel);
 		} else
 			cPanel.setOpaque(!cPanel.isOpaque());
+		numPanels = 0;
+    	for(JPanel panel : chatPanels)
+    		if(panel.isOpaque())
+    			numPanels++;
+		listFrame.setSize(new Dimension(panelwidth*(numPanels+1),listFrame.getHeight()));
 		updateAndShowListGUI();
 	}
 	
@@ -401,7 +400,6 @@ public class Client {
 				else if(type.equals("added"))
 					addUser(messageContents);
 				else if(type.equals("success")) {
-					signedIn = true;
 					chatPanels = new ArrayList<JPanel>();
 					loginFrame.dispose();
 					updateAndShowListGUI();
@@ -474,6 +472,7 @@ public class Client {
 				    			numPanels++;
 				        panelwidth = listFrame.getWidth()/(1+numPanels);
 				        chatPanels.remove(chatPanel);
+				        listFrame.setSize(new Dimension(panelwidth*(numPanels+1-1),listFrame.getHeight()));
 				        updateAndShowListGUI();
 					}
 				});
@@ -559,7 +558,7 @@ public class Client {
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
         Client aClient = new Client();
-    	while(!aClient.signedIn) {
+    	while(aClient.onlineListModel==null) {
     		try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
