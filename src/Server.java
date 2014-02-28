@@ -31,6 +31,8 @@ public class Server {
 					String type = message.split("/")[0];
 					if(type.equals("message"))
 						sendMessage(message, currentUser);
+					else if(type.equals("add"))
+						addUser(message, currentUser);
 					else if(type.equals("closing")) {
 						if(exitAction(message, currentUser))
 							it.remove();
@@ -46,13 +48,29 @@ public class Server {
 		}
 	}
 
+	public void addUser(String message, User currentUser) {
+		String[] tokens = message.split("/");
+		String name = tokens[1];
+		for(User u : users) {
+			if(u.signedIn()) {
+				if(u.username.equals(name) && !u.equals(currentUser)) {
+					if(currentUser.friends.add(u))
+						currentUser.sendMessage("added/" + u.username);
+					if(u.friends.add(currentUser))
+						u.sendMessage("added/" + currentUser.username);
+					return;
+				}
+			}
+		}
+	}
+
 	public void sendMessage(String message, User fromUser) {
 		String[] tokens = message.split("/");
 		String toUserName = tokens[1];
 		String toSend = tokens[2];
 		User match = null;
 		for(User aUser : users)
-			if(aUser.hasUserInfo() && aUser.username.equals(toUserName))
+			if(aUser.signedIn() && aUser.username.equals(toUserName))
 				match = aUser;
 		if(match!=null && match.connected) {
 			match.sendMessage("message/"+fromUser.username+"/"+toSend);
@@ -62,13 +80,14 @@ public class Server {
 	
 	public boolean exitAction(String s, User u) throws IOException {
 		boolean remove = false;
-		if(u.username!=null) {
+		if(u.signedIn()) {
 			for(User aUser : users) {
-				if(!aUser.equals(u))
-					aUser.sendMessage("removed/"+u.username);
+				for(User aUsersFriend : aUser.friends)
+					if(aUsersFriend.equals(u))
+						aUser.sendMessage("offline/"+u.username);
 			}
 		} else
-			remove =true;;
+			remove =true;
 		u.connected = false;
 		u.socket.close();
 		return remove;
@@ -83,17 +102,24 @@ public class Server {
 		Iterator<User> tempIt = users.iterator();
 		while(tempIt.hasNext()) {
 			User tempUser = tempIt.next();
-			if(tempUser.hasUserInfo() && user.equals(tempUser.username)) {
+			if(tempUser.signedIn() && user.equals(tempUser.username)) {
 				match = tempUser;
 				break;
 			}
 		}
 		if(match!=null && pass.equals(match.password) && !match.connected) {
+			u.sendMessage("success");
 			remove = true;
 			u.connected = false;
 			match.socket = u.socket;
 			match.connected = true;
-			addAction(match);
+			for(User aFriend : match.friends) {
+				if(aFriend.connected) {
+					aFriend.sendMessage("added/"+match.username);
+					match.sendMessage("added/"+aFriend.username);
+				} else
+					match.sendMessage("offline/"+aFriend.username);
+			}
 		} else
 			u.sendMessage("failure");
 		return remove;
@@ -105,7 +131,7 @@ public class Server {
 		String passWord = tokens[2];
 		boolean exists = false;
 		for(User aUser : users) {
-			if(aUser.hasUserInfo() && aUser.username.equals(userName)) {
+			if(aUser.signedIn() && aUser.username.equals(userName)) {
 				exists = true;
 				break;
 			}
@@ -113,25 +139,11 @@ public class Server {
 		if(!exists) {
 			u.username = userName;
 			u.password = passWord;
-			addAction(u);
+			u.sendMessage("success");
 		} else
 			u.sendMessage("failure");
 	}
-	
-	public void addAction(User u) {
-		u.sendMessage("success");
-		for(User aUser : users) {
-			if(aUser.hasUserInfo() && !aUser.equals(u)) {
-				aUser.sendMessage("added/"+u.username);
-			}
-		}
-		String listOfUsers = "";
-		for(User aUser : users)
-			if(aUser.hasUserInfo() && aUser.connected && !aUser.equals(u))
-				listOfUsers += "/" + aUser.username;
-		u.sendMessage("added"+listOfUsers);
-	}
-	
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 		Server theServer = new Server(12543);
 		while(true) {

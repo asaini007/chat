@@ -2,25 +2,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 public class User {
 	public String username;
 	public String password;
+	public Set<User> friends;
 	public Socket socket;
 	public boolean connected;
 	
 	public User(Socket sock) {
 		socket = sock;
+		friends = new HashSet<User>();
 		connected = true;
 	}
 	
 	public boolean equals(User otherUser) {
-		if(otherUser.hasUserInfo() && hasUserInfo())
+		if(otherUser.signedIn() && signedIn())
 			return otherUser.username.equals(username);
 		return false;
 	}
 	
-	public boolean hasUserInfo() {
+	public boolean signedIn() {
 		return (username!=null && password!=null);
 	}
 	

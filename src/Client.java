@@ -1,14 +1,5 @@
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -16,20 +7,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
 public class Client {
 	Socket socket;
@@ -40,13 +18,15 @@ public class Client {
 	
 	JFrame loginFrame, listFrame;
 	ArrayList<JPanel> chatPanels;
-	JLabel loginLabel, usernameLabel, passwordLabel, friendsLabel;
-	JTextField nameField;
+	JLabel loginLabel, usernameLabel, passwordLabel, onlinefriendsLabel, offlinefriendsLabel;
+	JTextField nameField, search;
 	JPasswordField passField;
-	JButton newUserButton, loginButton;
-    JList<String> friendsList;
-    DefaultListModel<String> listModel;
-    JScrollPane areaScrollPane, listScrollPane;
+	JButton newUserButton, loginButton, add;
+    JList<String> onlineFriendsList;
+    JList<String> offlineFriendsList;
+    DefaultListModel<String> onlineListModel;
+    DefaultListModel<String> offlineListModel;
+    JScrollPane areaScrollPane, onlineListScrollPane, offlineListScrollPane;
 	
 	public Client() {
 		try {
@@ -196,32 +176,108 @@ public class Client {
     }
 	
 	public JPanel getListContentPane() {
-		if(chatPanels.size()==0 && listModel==null) {
-	        friendsLabel = new JLabel("Online Users:");
-	        friendsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-	        
-	        listModel = new DefaultListModel<String>();
-	        friendsList = new JList<String>(listModel);
-	        friendsList.addMouseListener(new MouseAdapter() {
+		if(chatPanels.size()==0 && onlineListModel==null) { 
+	        onlineListModel = new DefaultListModel<String>();
+	        onlineFriendsList = new JList<String>(onlineListModel);
+	        onlineFriendsList.addMouseListener(new MouseAdapter() {
 	        	public void mouseClicked(MouseEvent event) {
 	                if(event.getClickCount() == 2) {
-	                	Rectangle r = friendsList.getCellBounds(0, friendsList.getLastVisibleIndex());
+	                	Rectangle r = onlineFriendsList.getCellBounds(0, onlineFriendsList.getLastVisibleIndex());
 						if(r != null && r.contains(event.getPoint())) {
-	                		int index = friendsList.locationToIndex(event.getPoint());
-	                		createNewWindow((String)listModel.get(index));
+	                		int index = onlineFriendsList.locationToIndex(event.getPoint());
+	                		createNewWindow((String)onlineListModel.get(index));
 						}
 	                }
 	            }
 	        });
-	        listScrollPane = new JScrollPane(friendsList);
-	        listScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+	        onlineListScrollPane = new JScrollPane(onlineFriendsList);
+	        onlineListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+	        
+	        offlineListModel = new DefaultListModel<String>();
+	        offlineFriendsList = new JList<String>(offlineListModel);
+	        offlineFriendsList.addMouseListener(new MouseAdapter() {
+	        	public void mouseClicked(MouseEvent event) {
+	                if(event.getClickCount() == 2) {
+	                	Rectangle r = offlineFriendsList.getCellBounds(0, offlineFriendsList.getLastVisibleIndex());
+						if(r != null && r.contains(event.getPoint())) {
+	                		// int index = offlineFriendsList.locationToIndex(event.getPoint());
+	                		// createNewWindow((String)offlineListModel.get(index));
+						}
+	                }
+	            }
+	        });
+	        offlineListScrollPane = new JScrollPane(offlineFriendsList);
+	        offlineListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+	        
+	        onlinefriendsLabel = new JLabel("Online Friends:", JLabel.HORIZONTAL);
+	        offlinefriendsLabel = new JLabel("Offline Friends:", JLabel.HORIZONTAL);
+	        
+	        search = new JTextField("Add Friend...");
+	        search.addFocusListener(new FocusListener() {
+				public void focusGained(FocusEvent e) {
+					search.setText("");
+				}
+				public void focusLost(FocusEvent e) {
+					if(search.getText().equals(""))
+						search.setText("Add Friend...");
+				}
+	        });
+	        search.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String name = search.getText();
+					search.setText("");
+					if(!name.equals("") && !name.equals("Add Friend...") && name != null)
+						addFriend(name);
+				}
+	        });
+	        
+	        add = new JButton("Add");
+	        add.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String name = search.getText();
+					search.setText("Add Friend...");
+					if(!name.equals("") && !name.equals("Add Friend...") && name != null)
+						addFriend(name);
+				}
+	        });
 		}
 		JPanel mainPane = new JPanel();
 		mainPane.setLayout(new GridLayout(1,0));
+		
 		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.add(friendsLabel);        
-        listPanel.add(listScrollPane);
+		listPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 2;
+		c.gridheight = 1;
+		c.weightx = 1;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.BOTH;
+        listPanel.add(onlinefriendsLabel, c);
+        
+        c.gridy = 1;
+        c.weighty = 1;
+        listPanel.add(onlineListScrollPane,c);
+        
+		c.gridy = 2;
+        c.weighty = 0;
+        listPanel.add(offlinefriendsLabel,c);       
+        
+        c.gridy = 3;
+        c.weighty = 1;
+        listPanel.add(offlineListScrollPane,c);
+        
+        c.gridy = 4;
+        c.gridwidth = 1;
+        c.weighty = 0;
+        listPanel.add(search,c);
+        
+        c.gridx = 1;
+        c.weightx = 0;
+        listPanel.add(add,c);
+        
         mainPane.add(listPanel);
         for(JPanel chatPanel : chatPanels)
         	if(chatPanel.isOpaque())
@@ -320,6 +376,14 @@ public class Client {
 		} catch (IOException e) {}
 	}
 	
+	public void addFriend(String name) {
+		String message = "add/"+name;
+		try {
+			output.writeInt(message.getBytes().length);
+			output.write(message.getBytes(), 0, message.getBytes().length);
+		} catch (IOException e) {}
+	}
+	
 	public void getMessage() {
 		try {
 			if(input.available() > 0) {
@@ -332,17 +396,10 @@ public class Client {
 					newMessage(messageContents);
 				else if(type.equals("ownmessage"))
 					ownMessage(messageContents);
-				else if(type.equals("removed"))
+				else if(type.equals("offline"))
 					removeUser(messageContents[1]);
 				else if(type.equals("added"))
-					for(int i=1;i<messageContents.length;i++) {
-						while(listModel == null) {
-							try {
-								Thread.sleep(100);
-							} catch (InterruptedException e) {}
-						}
-						listModel.addElement(messageContents[i]);
-					}
+					addUser(messageContents);
 				else if(type.equals("success")) {
 					signedIn = true;
 					chatPanels = new ArrayList<JPanel>();
@@ -354,8 +411,49 @@ public class Client {
 		} catch (IOException e) {}
 	}
 	
+	public void addUser(String[] messageContents) {
+		for(int i=1;i<messageContents.length;i++) {
+			String friend = messageContents[i];
+			while(onlineListModel == null || offlineListModel == null) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {}
+			}
+			onlineListModel.addElement(messageContents[i]);
+			for(int j = 0; j < offlineListModel.size(); j++){
+				if(friend.equals(offlineListModel.get(j)))
+					offlineListModel.remove(j);
+			}
+			for(final JPanel chatPanel : chatPanels)
+				if(((JLabel) chatPanel.getComponent(0)).getText().equals(friend)) {
+					JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
+					textArea.append((textArea.getText() == null ||  textArea.getText().equals("")) ? friend+" has reconnected" : "\n"+friend+" has reconnected");
+					textArea.setCaretPosition(textArea.getDocument().getLength());
+					final JTextField text = ((JTextField) chatPanel.getComponent(2));
+					text.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							if(text.getText() != null && !text.getText().equals(""))
+								sendMessage(text);
+						}
+			        });
+					text.setEditable(true);
+					text.setText("");
+					JButton button = ((JButton) chatPanel.getComponent(3));
+					button.setText("Send");
+					button.removeActionListener(button.getActionListeners()[0]);
+					button.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							if(text.getText() != null && !text.getText().equals(""))
+								sendMessage(text);
+						}
+			        });
+				}
+		}
+	}
+
 	public void removeUser(String user) {
-		listModel.removeElement(user);
+		onlineListModel.removeElement(user);
+		offlineListModel.addElement(user);
 		for(final JPanel chatPanel : chatPanels)
 			if(((JLabel) chatPanel.getComponent(0)).getText().equals(user)) {
 				JTextArea textArea = (JTextArea) ((JScrollPane) chatPanel.getComponent(1)).getViewport().getView();
